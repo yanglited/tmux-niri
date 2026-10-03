@@ -19,7 +19,7 @@ tmux. tmux's own keys are untouched, and the two new keys work without the prefi
 | Key | Action |
 |---|---|
 | `Alt+n` | Open a new column right of the current one and scroll to it |
-| `Alt+r` | Cycle the current column through 30%, 50% and 90% of the terminal, like niri's `Mod+R` |
+| `Alt+r` | Step the current column through 33.33%, 50%, 66.66% and 100% of the terminal and back down again, like niri's `Mod+R` |
 | your usual pane keys | Moving focus scrolls the strip so the whole column is visible. Works with mouse clicks, `select-pane`, and [vim-tmux-navigator](https://github.com/christoomey/vim-tmux-navigator)'s `Ctrl+hjkl` |
 | `prefix "` | Still a vertical split: panes stack inside a column, like windows in a niri column |
 | `prefix %` | Still tmux's horizontal split, inside the current column |
@@ -85,7 +85,7 @@ All optional; these are the defaults.
 set -g @scrollable-split-key 'M-n'    # key (no prefix) that opens a new column
 set -g @scrollable-preset-key 'M-r'   # key (no prefix) that cycles the column width
 set -g @scrollable-width 50           # new column width, percent of the terminal
-set -g @scrollable-presets '30 50 90' # widths Alt+r cycles through, like niri's preset-column-widths
+set -g @scrollable-presets '33.33 50 66.66 100' # widths Alt+r steps through, up then back down
 set -g @scrollable-log ''             # path of a debug log of every layout change; empty = off
 ```
 
@@ -119,6 +119,8 @@ are left alone.
   different sizes attached to one session, the others get a scaled view.
 - Columns resized by hand (mouse drag, `resize-pane`) snap back to their stored width on
   the next split, close or `Alt+r`.
+- Pane numbers (`prefix q`) follow creation order, so a column inserted mid-strip gets the
+  highest number rather than the one matching its position.
 - tmux-resurrect restores a scrolled window squeezed into the terminal; columns keep their
   relative sizes but you have to split again to get the wide layout back.
 

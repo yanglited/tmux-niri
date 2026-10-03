@@ -22,9 +22,9 @@ layout() { tmux display -p -t "$1" '#{window_layout}'; }
 managed() { (( $(widths "$1" | awk 'NF>1' | wc -l) > 0 )); }
 columns() { "$DIR/layout.py" columns "$(layout "$1")" < <(widths "$1"); }
 
-# width in cells for a percentage of the terminal; the +1/-1 account for the one-cell
-# border, so columns adding up to 100% fill the terminal exactly
-cells() { local w=$(( ($2 + 1) * $1 / 100 - 1 )); echo $(( w < 1 ? 1 : w )); }
+# width in cells for a percentage (decimals allowed) of the terminal; the +1/-1 account
+# for the one-cell border, so columns adding up to 100% fill the terminal exactly
+cells() { awk -v p="$1" -v cw="$2" 'BEGIN { w = int((cw + 1) * p / 100) - 1; print (w < 1 ? 1 : w) }'; }
 
 # Resize the window to its columns' total and give every column its width, in one
 # select-layout. $2 reorders the columns (comma-separated indexes), $3 = "force" manages a
@@ -113,16 +113,29 @@ active_span() {
     | awk -v ids=",$ids," '{ if (index(ids, ","$1",")) { if (!c++ || $2<l) l=$2; if ($2+$3>r) r=$2+$3 } } END { print l, r-l }'
 }
 
-# Cycle the active column through the preset widths (niri's switch-preset-column-width)
+# Cycle the active column through the preset widths (niri's switch-preset-column-width),
+# bouncing at the ends: 33 -> 50 -> 66 -> 100 -> 66 -> 50 -> ... The direction is remembered per
+# column. A width matching no preset first goes up to the next larger one.
 cycle() {
-  local win cw idx cur ids presets next p id args=()
+  local win cw idx cur ids presets dir i j n p id args=() w=()
   read -r win cw < <(tmux display -p '#{window_id} #{client_width}')
   read -r idx cur ids _ < <(active_col "$win")
-  presets=$(tmux show -gqv @scrollable-presets); presets=${presets:-30 50 90}
-  next=""   # first preset wider than the column now, relative to the current terminal
-  for p in $presets; do (( $(cells "$p" "$cw") > cur )) && { next=$p; break; }; done
-  [[ -n $next ]] || next=${presets%% *}
-  for id in ${ids//,/ }; do args+=(set -p -t "$id" @scrollable_w "$(cells "$next" "$cw")" \;); done
+  presets=$(tmux show -gqv @scrollable-presets); presets=${presets:-33.33 50 66.66 100}
+  for p in $presets; do w+=("$(cells "$p" "$cw")"); done
+  n=${#w[@]}
+  dir=$(tmux show -pqv -t "${ids%%,*}" @scrollable_dir); dir=${dir:-1}
+  j=-1
+  for ((i = 0; i < n; i++)); do (( w[i] == cur )) && { j=$i; break; }; done
+  if (( j < 0 )); then                      # not on a preset: nearest step up, else top-1
+    dir=1; j=$n
+    for ((i = 0; i < n; i++)); do (( w[i] > cur )) && { j=$i; break; }; done
+    (( j == n )) && { j=$(( n > 1 ? n - 2 : 0 )); dir=-1; }
+  else
+    j=$(( j + dir ))
+    (( j < 0 || j >= n )) && { dir=$(( -dir )); j=$(( j + 2 * dir )); }
+    (( j < 0 || j >= n )) && j=0           # a single preset
+  fi
+  for id in ${ids//,/ }; do args+=(set -p -t "$id" @scrollable_w "${w[j]}" \; set -p -t "$id" @scrollable_dir "$dir" \;); done
   tmux "${args[@]:0:${#args[@]}-1}"
   fit "$win" "" force
 }

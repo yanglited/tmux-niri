@@ -24,18 +24,18 @@ $T select-pane -t t:.1; sleep 0.3;      expect 'focus middle column fully visibl
 $T send-keys -t t:.1 'tput civis; sleep 1' Enter; sleep 0.5; expect 'hidden cursor does not move view' 50 200 0 101 151
 sleep 0.8
 cycle() { $T run-shell "$PWD/../scripts/scrollable.sh cycle"; sleep 0.4; }
-cycle;                                  expect 'preset 50 -> 90 widens column'      90  240 0 101 191
-cycle;                                  expect 'preset 90 -> 30 narrows column'     80  180 0 101 131
-cycle;                                  expect 'preset 30 -> 50 back'               80  200 0 101 151
-$T split-window -v -t t:.1; sleep 0.3;  expect 'vertical split stacks in column'   80  200 0 101 101 151
-$T split-window -h -t t:.2; sleep 0.4;  expect 'stock split inside a column row'    80  200 0 101 101 126 151
-$T select-pane -t t:.1; sleep 0.4;      expect 'focus up keeps nested row intact'   80  200 0 101 101 126 151
-$T kill-pane -t t:.3; sleep 0.6;        expect 'close nested pane keeps columns'    80  200 0 101 101 151
-split;                                  expect 'split inserts after current column' 100 250 0 101 101 151 201
-$T kill-pane -t t:.4; sleep 0.6;        expect 'kill-pane shrinks window'          100 200 0 101 101 151
-$T send-keys -t t:.3 exit Enter; sleep 0.8; expect 'shell exit shrinks window'     50  150 0 101 101
-$T send-keys -t t:.2 exit Enter; sleep 0.8; expect 'stacked exit keeps columns'    50  150 0 101
-$T select-pane -t t:.0; sleep 0.3; cycle; expect 'first column 30%: window narrower than terminal' '' 79 0 30
-cycle; cycle;                           expect 'then 50% and 90%: window grows again' 0 139 0 90
+cycle;                                  expect 'preset 50 -> 66 widens column'      67  217 0 101 168
+cycle;                                  expect 'preset 66 -> 100 widens more'       101 251 0 101 202
+cycle;                                  expect 'preset 100 -> 66 steps back down'   101 217 0 101 168
+$T split-window -v -t t:.1; sleep 0.3;  expect 'vertical split stacks in column'   101 217 0 101 101 168
+$T split-window -h -t t:.2; sleep 0.4;  expect 'stock split inside a column row'    101 217 0 101 101 135 168
+$T select-pane -t t:.1; sleep 0.4;      expect 'focus up keeps nested row intact'   101 217 0 101 101 135 168
+$T kill-pane -t t:.3; sleep 0.6;        expect 'close nested pane keeps columns'    101 217 0 101 101 168
+split;                                  expect 'split inserts after current column' 117 267 0 101 101 168 218
+$T kill-pane -t t:.4; sleep 0.6;        expect 'kill the new (active) column'      101 217 0 101 101 168
+$T send-keys -t t:.3 exit Enter; sleep 0.8; expect 'shell exit shrinks window'     67  167 0 101 101
+$T send-keys -t t:.2 exit Enter; sleep 0.8; expect 'stacked exit keeps columns'    67  167 0 101
+$T select-pane -t t:.0; sleep 0.3; cycle; expect 'first column 100% -> 66%'           0   133 0 67
+cycle; cycle;                           expect 'then 50% and 33%: narrower than terminal' '' 99 0 33
 $T kill-pane -t t:.1; sleep 0.6;        expect 'single column returns to normal'   ''  100 0
 echo all ok

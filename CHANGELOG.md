@@ -6,6 +6,21 @@ All notable changes to tmux-scrollable are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-03
+
+### Changed
+
+- `Alt+r` now steps up through the presets and back down (33 → 50 → 66 → 100 → 66 → 50 …)
+  instead of looping back to the smallest. The direction is remembered per column; a column
+  at a width matching no preset first steps up to the next larger one.
+- Default presets are `33.33 50 66.66 100` (were `30 50 90`); `@scrollable-presets` accepts
+  decimals.
+
+### Documented
+
+- Pane numbers (`prefix q`) follow creation order, so a column inserted mid-strip gets the
+  highest number rather than the one matching its position.
+
 ## [0.1.0] - 2026-10-03
 
 First release.
@@ -45,5 +60,6 @@ First release.
   `Alt+r`.
 - tmux-resurrect restores a scrolled window squeezed into the terminal.
 
-[Unreleased]: https://github.com/yanglited/tmux-scrollable/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/yanglited/tmux-scrollable/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/yanglited/tmux-scrollable/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/yanglited/tmux-scrollable/releases/tag/v0.1.0
