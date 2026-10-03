@@ -28,4 +28,4 @@ tmux set-hook -g 'window-pane-changed[tmux-scrollable]' "run-shell '$S focus #{w
 for h in session-window-changed client-resized after-kill-pane; do
   tmux set-hook -g "$h[tmux-scrollable]" "run-shell '$S fit #{window_id}'"
 done
-tmux set-hook -gw 'pane-exited[tmux-scrollable]' "run-shell 'sleep 0.1; $S fit #{window_id}'"   # fires before the pane is removed
+tmux set-hook -gw 'pane-exited[tmux-scrollable]' "run-shell 'sleep 0.02; $S fit #{window_id}'"   # fires just before the pane is removed
