@@ -47,7 +47,8 @@ then `prefix I`.
 - **`cursor-offset.patch`** from this repo, until it is upstream. Without it tmux hides
   the cursor whenever the view is scrolled: its visibility check is given screen coordinates
   where it expects window coordinates.
-- python3 (for the layout maths) and `flock` (util-linux).
+- python3 (for the layout maths). `flock` (util-linux) is used when present to serialise
+  concurrent hook runs. Developed and tested on Linux; macOS is untested.
 
 Until 3.8 is released, build a release candidate:
 
@@ -126,3 +127,7 @@ are left alone.
 `test/e2e.sh` drives a throwaway tmux server with a fake terminal attached and checks
 window width, scroll offset and column positions after every operation.
 `demo/record.sh` re-records `demo.gif` the same way, with asciinema and agg.
+
+## License
+
+MIT.

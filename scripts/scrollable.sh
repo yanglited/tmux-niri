@@ -9,9 +9,12 @@ DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Hooks fire several copies of this script at once (closing a pane fires three), so
 # serialise: interleaved resize commands from two runs corrupt tmux's layout tree.
-exec 9>"${TMUX_TMPDIR:-/tmp}/tmux-scrollable-$(id -u).lock"; flock 9
+# flock is util-linux; without it (macOS) runs are not serialised.
+if command -v flock >/dev/null; then
+  exec 9>"${TMUX_TMPDIR:-/tmp}/tmux-scrollable-$(id -u).lock"; flock 9
+fi
 
-log() { [[ -n ${SCROLLABLE_LOG:-} ]] && printf '%s %s\n' "$(date +%T.%N)" "$*" >> "$SCROLLABLE_LOG"; return 0; }
+log() { [[ -n ${SCROLLABLE_LOG:-} ]] && printf '%s %s\n' "${EPOCHREALTIME:-$(date +%s)}" "$*" >> "$SCROLLABLE_LOG"; return 0; }
 SCROLLABLE_LOG=$(tmux show -gqv @scrollable-log)
 
 widths() { tmux list-panes -t "$1" -F '#{pane_id} #{@scrollable_w}'; }

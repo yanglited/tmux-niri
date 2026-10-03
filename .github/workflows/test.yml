@@ -1,0 +1,19 @@
+name: test
+on: [push, pull_request]
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build tmux 3.8-rc3 with the cursor patch
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q libevent-dev libncurses-dev bison autoconf automake pkg-config
+          git clone --depth 1 --branch 3.8-rc3 https://github.com/tmux/tmux.git /tmp/tmux
+          cd /tmp/tmux
+          patch -p0 < "$GITHUB_WORKSPACE/cursor-offset.patch"
+          sh autogen.sh && ./configure --disable-debug && make -j"$(nproc)"
+          sudo install -m755 tmux /usr/local/bin/tmux
+          tmux -V
+      - name: Run end-to-end tests
+        run: test/e2e.sh

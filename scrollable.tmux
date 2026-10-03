@@ -7,17 +7,24 @@ S="$DIR/scripts/scrollable.sh"
 
 # tmux <= 3.7 draws a window wider than the terminal with ghost borders and can spin
 # the server at 100% CPU for minutes (tmux issue 5664); refuse rather than freeze
-ver="$(tmux -V | sed 's/^[^0-9]*//; s/[^0-9.].*$//')"
-if [ "$(printf '%s\n' 3.8 "$ver" | sort -V | head -1)" != 3.8 ]; then
+ver="$(tmux -V | sed 's/^[^0-9]*//; s/[^0-9.].*$//')"   # "3.8-rc3" -> 3.8, "next-3.9" -> 3.9
+IFS=. read -r major minor _ <<< "$ver"
+if (( ${major:-0} < 3 || (${major:-0} == 3 && ${minor:-0} < 8) )); then
   tmux display-message "tmux-scrollable needs tmux >= 3.8 (found $ver); not loaded"
   exit 0
 fi
 
 # Both keys work without the prefix, like niri's Mod+key; tmux's own bindings are untouched.
-key="$(tmux show -gqv @scrollable-split-key)"
-tmux bind-key -n "${key:-M-n}" run-shell "$S split"
-key="$(tmux show -gqv @scrollable-preset-key)"
-tmux bind-key -n "${key:-M-r}" run-shell "$S cycle"
+# The key last bound is remembered so re-sourcing after changing an option unbinds it.
+bind() {  # bind <option> <default> <action>
+  local key old
+  key="$(tmux show -gqv "$1")"; key=${key:-$2}
+  old="$(tmux show -gqv "@scrollable-bound-$3")"
+  [[ -n $old && $old != "$key" ]] && tmux unbind-key -n "$old"
+  tmux bind-key -n "$key" run-shell "$S $3" \; set -g "@scrollable-bound-$3" "$key"
+}
+bind @scrollable-split-key M-n split
+bind @scrollable-preset-key M-r cycle
 
 # Hooks are arrays; a key keeps ours separate from any hook the user has set.
 #   window-pane-changed   active pane changed (keys, mouse): just scroll to it (fast path)
