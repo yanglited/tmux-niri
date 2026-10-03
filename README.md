@@ -58,6 +58,24 @@ sh autogen.sh && ./configure --disable-debug && make -j"$(nproc)" && install -Dm
 tmux kill-server   # the running server must be restarted on the new binary
 ```
 
+### Try my whole tmux setup
+
+My own config at [yanglited/tmux](https://github.com/yanglited/tmux) is a small, readable
+tmux.conf with this plugin plus tmux-sensible, tmux-resurrect, tmux-yank and
+vim-tmux-navigator (so `Ctrl+hjkl` moves between vim splits and tmux columns alike), a clear
+status bar and pane titles, `Alt+hjkl` to swap panes, and `prefix v` to open the pane's
+scrollback in nvim. To try it without losing yours:
+
+```sh
+mv ~/.config/tmux ~/.config/tmux.bak 2>/dev/null; mv ~/.tmux.conf ~/.tmux.conf.bak 2>/dev/null
+git clone https://github.com/yanglited/tmux.git ~/.config/tmux
+git clone https://github.com/tmux-plugins/tpm ~/.config/tmux/plugins/tpm
+tmux kill-server 2>/dev/null; tmux
+```
+
+Inside tmux press `prefix I` (Ctrl+b, then Shift+i) to let TPM install the plugins, then
+`Alt+n`. To go back: `tmux kill-server`, delete `~/.config/tmux` and restore the `.bak` copies.
+
 ## Options
 
 All optional; these are the defaults.
