@@ -1,0 +1,20 @@
+--- server-client.c.orig	2026-10-03 10:52:28.175337164 -0400
++++ server-client.c	2026-10-03 10:52:28.190078442 -0400
+@@ -2237,8 +2237,15 @@
+ 				cx = wp->xoff + (int)s->cx - (int)ox;
+ 				cy = wp->yoff + (int)s->cy - (int)oy;
+ 
+-				r = window_visible_ranges(wp, cx, cy, 1, NULL);
+-				if (!window_position_is_visible(r, cx))
++				/*
++				 * Visibility ranges are in window coordinates;
++				 * cx/cy already have the client offset removed.
++				 */
++				r = window_visible_ranges(wp,
++				    wp->xoff + (int)s->cx, wp->yoff + (int)s->cy,
++				    1, NULL);
++				if (!window_position_is_visible(r,
++				    wp->xoff + (int)s->cx))
+ 					cursor = 0;
+ 
+ 				if (window_pane_scrollbar_overlay_visible(wp)) {
