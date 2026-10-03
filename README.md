@@ -103,7 +103,8 @@ are left alone.
 - tmux-resurrect restores a scrolled window squeezed into the terminal; columns keep their
   relative sizes but you have to split again to get the wide layout back.
 
-## Tests
+## Tests and demo
 
 `test/e2e.sh` drives a throwaway tmux server with a fake terminal attached and checks
 window width, scroll offset and column positions after every operation.
+`demo/record.sh` re-records `demo.gif` the same way, with asciinema and agg.
