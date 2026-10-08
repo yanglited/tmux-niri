@@ -6,6 +6,15 @@ All notable changes to tmux-scrollable are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-10-08
+
+### Fixed
+
+- `prefix z` zooms the pane to the terminal, not to the whole column strip. tmux zooms to
+  the window size, which the plugin sets to the sum of all columns, so the zoomed pane was
+  wider than the screen and its left part scrolled out of view.
+- `Alt+n` and `Alt+r` on a zoomed pane unzoom it first.
+
 ## [0.2.0] - 2026-10-03
 
 ### Changed
@@ -49,7 +58,7 @@ First release.
   scrolled, needed until it is upstream.
 - `@scrollable-log` debug log of every layout change.
 - End-to-end test suite (`test/e2e.sh`) on a throwaway tmux server, run in CI against
-  tmux 3.8-rc3 with the patch applied.
+  tmux 3.8 with the patch applied.
 - Demo recording script (`demo/record.sh`) producing `demo.gif` with asciinema and agg.
 
 ### Known limits

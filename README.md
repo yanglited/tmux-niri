@@ -50,10 +50,10 @@ then `prefix I`.
 - python3 (for the layout maths). `flock` (util-linux) is used when present to serialise
   concurrent hook runs. Developed and tested on Linux; macOS is untested.
 
-Until 3.8 is released, build a release candidate:
+If your distro does not ship 3.8 yet, build it from the tag:
 
 ```sh
-git clone --depth 1 --branch 3.8-rc3 https://github.com/tmux/tmux.git && cd tmux
+git clone --depth 1 --branch 3.8 https://github.com/tmux/tmux.git && cd tmux
 patch -p0 < ~/.config/tmux/plugins/tmux-scrollable/cursor-offset.patch
 sh autogen.sh && ./configure --disable-debug && make -j"$(nproc)" && install -Dm755 tmux ~/.local/bin/tmux
 tmux kill-server   # the running server must be restarted on the new binary

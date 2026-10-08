@@ -18,6 +18,9 @@ log() { [[ -n ${SCROLLABLE_LOG:-} ]] && printf '%s %s\n' "${EPOCHREALTIME:-$(dat
 SCROLLABLE_LOG=$(tmux show -gqv @scrollable-log)
 
 widths() { tmux list-panes -t "$1" -F '#{pane_id} #{@scrollable_w}'; }
+# Unzooming fires after-resize-pane, whose fit needs the lock and whom tmux waits for, so
+# let go of the lock around the call or Alt+n/Alt+r on a zoomed pane deadlocks.
+unzoom() { [[ $(tmux display -p -t "$1" '#{window_zoomed_flag}') == 1 ]] && { flock -u 9; tmux resize-pane -Z -t "$1"; flock 9; }; return 0; }
 layout() { tmux display -p -t "$1" '#{window_layout}'; }
 managed() { (( $(widths "$1" | awk 'NF>1' | wc -l) > 0 )); }
 columns() { "$DIR/layout.py" columns "$(layout "$1")" < <(widths "$1"); }
@@ -30,11 +33,19 @@ cells() { awk -v p="$1" -v cw="$2" 'BEGIN { w = int((cw + 1) * p / 100) - 1; pri
 # select-layout. $2 reorders the columns (comma-separated indexes), $3 = "force" manages a
 # window the plugin has not touched yet (keeping its current column widths).
 fit() {
-  local win=$1 order=${2:-} force=${3:-} cw ch st rows cur total new cols
+  local win=$1 order=${2:-} force=${3:-} cw ch st rows cur total new cols zoomed
   # leave stock tmux windows alone unless asked
   [[ $force == force ]] || managed "$win" || return 0
-  read -r cw ch st cur < <(tmux display -p -t "$win" '#{client_width} #{client_height} #{status} #{window_width}x#{window_height}')
+  read -r cw ch st cur zoomed < <(tmux display -p -t "$win" '#{client_width} #{client_height} #{status} #{window_width}x#{window_height} #{window_zoomed_flag}')
   case $st in on) rows=1 ;; off) rows=0 ;; *) rows=$st ;; esac
+  # A zoomed pane fills the terminal, not the whole strip: tmux zooms to the window size,
+  # which here is the sum of all columns. Only resize; #{window_layout} is the zoomed
+  # single-pane layout while zoomed, so the column maths below must not see it. Unzooming
+  # fires after-resize-pane, which brings us back here to restore the strip.
+  if (( zoomed )); then
+    [[ $cur == "${cw}x$(( ch - rows ))" ]] || tmux resize-window -t "$win" -x "$cw" -y "$(( ch - rows ))"
+    return
+  fi
   { read -r total; read -r new; cols=$(cat); } < <("$DIR/layout.py" apply "$(layout "$win")" "$(( ch - rows ))" "$order" < <(widths "$win"))
   log "fit $win client=${cw}x$ch window=$cur cols=[$(tr '\n' ';' <<< "$cols")]"
   # every pane carries its column's width (new panes inherit it) and the column's index,
@@ -119,6 +130,7 @@ active_span() {
 cycle() {
   local win cw idx cur ids presets dir i j n p id args=() w=()
   read -r win cw < <(tmux display -p '#{window_id} #{client_width}')
+  unzoom "$win"
   read -r idx cur ids _ < <(active_col "$win")
   presets=$(tmux show -gqv @scrollable-presets); presets=${presets:-33.33 50 66.66 100}
   for p in $presets; do w+=("$(cells "$p" "$cw")"); done
@@ -144,6 +156,7 @@ cycle() {
 split() {
   local win cw pct path pane idx n order i
   read -r win cw pct path < <(tmux display -p '#{window_id} #{client_width} #{?#{@scrollable-width},#{@scrollable-width},50} #{pane_current_path}')
+  unzoom "$win"
   read -r idx _ _ n < <(active_col "$win")
   # -f: a full-height column at the window's right edge; fit then moves it after the current column
   pane=$(tmux split-window -h -f -l 1 -c "$path" -P -F '#{pane_id}')
