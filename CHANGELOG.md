@@ -6,6 +6,14 @@ All notable changes to tmux-scrollable are documented here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- `prefix s` and `prefix w` (`choose-tree -Z`) showed a blank screen on a scrolled window.
+  choose-tree zooms the pane without going through `resize-pane`, so the zoom was never
+  fitted to the terminal; the plugin now listens to tmux 3.8's `window-zoomed` and
+  `window-unzoomed` hooks instead of `after-resize-pane`.
+- CI and the README build tmux from the `3.8` tag; the `3.8-rc3` tag was removed upstream.
+
 ## [0.2.1] - 2026-10-08
 
 ### Fixed

@@ -31,9 +31,10 @@ bind @scrollable-preset-key M-r cycle
 #   session-window-changed window switched: a scrolled window must match this client
 #   client-resized        terminal resized: columns are a percentage of its width
 #   after-kill-pane / pane-exited  a column closed: shrink the window
-#   after-resize-pane     prefix z: a zoomed pane fills the terminal, not the whole strip
+#   window-zoomed / window-unzoomed  a zoomed pane fills the terminal, not the whole strip;
+#                         fired by prefix z and by choose-tree -Z (prefix s / prefix w)
 tmux set-hook -g 'window-pane-changed[tmux-scrollable]' "run-shell '$S focus #{window_id}'"
-for h in session-window-changed client-resized after-kill-pane after-resize-pane; do
+for h in session-window-changed client-resized after-kill-pane window-zoomed window-unzoomed; do
   tmux set-hook -g "$h[tmux-scrollable]" "run-shell '$S fit #{window_id}'"
 done
 tmux set-hook -gw 'pane-exited[tmux-scrollable]' "run-shell 'sleep 0.02; $S fit #{window_id}'"   # fires just before the pane is removed

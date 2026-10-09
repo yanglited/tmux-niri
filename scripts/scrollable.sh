@@ -18,9 +18,8 @@ log() { [[ -n ${SCROLLABLE_LOG:-} ]] && printf '%s %s\n' "${EPOCHREALTIME:-$(dat
 SCROLLABLE_LOG=$(tmux show -gqv @scrollable-log)
 
 widths() { tmux list-panes -t "$1" -F '#{pane_id} #{@scrollable_w}'; }
-# Unzooming fires after-resize-pane, whose fit needs the lock and whom tmux waits for, so
-# let go of the lock around the call or Alt+n/Alt+r on a zoomed pane deadlocks.
-unzoom() { [[ $(tmux display -p -t "$1" '#{window_zoomed_flag}') == 1 ]] && { flock -u 9; tmux resize-pane -Z -t "$1"; flock 9; }; return 0; }
+# Unzooming fires window-unzoomed, whose fit waits for our lock after we are done.
+unzoom() { [[ $(tmux display -p -t "$1" '#{window_zoomed_flag}') == 1 ]] && tmux resize-pane -Z -t "$1"; return 0; }
 layout() { tmux display -p -t "$1" '#{window_layout}'; }
 managed() { (( $(widths "$1" | awk 'NF>1' | wc -l) > 0 )); }
 columns() { "$DIR/layout.py" columns "$(layout "$1")" < <(widths "$1"); }
@@ -41,7 +40,7 @@ fit() {
   # A zoomed pane fills the terminal, not the whole strip: tmux zooms to the window size,
   # which here is the sum of all columns. Only resize; #{window_layout} is the zoomed
   # single-pane layout while zoomed, so the column maths below must not see it. Unzooming
-  # fires after-resize-pane, which brings us back here to restore the strip.
+  # fires window-unzoomed, which brings us back here to restore the strip.
   if (( zoomed )); then
     [[ $cur == "${cw}x$(( ch - rows ))" ]] || tmux resize-window -t "$win" -x "$cw" -y "$(( ch - rows ))"
     return

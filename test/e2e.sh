@@ -23,6 +23,10 @@ $T resize-pane -Z -t t:.2; sleep 0.4
 got="$($T list-clients -F '#{window_offset_x} #{window_width} #{window_zoomed_flag}') $($T display -p -t t:.2 '#{pane_left} #{pane_width}')"
 [[ $got == " 100 1 0 100" ]] && echo 'ok   zoom fills the terminal, not the strip' || { echo "FAIL zoom: got [$got]"; exit 1; }
 $T resize-pane -Z -t t:.2; sleep 0.6;   expect 'unzoom restores the strip'          100 200 0 101 151
+$T choose-tree -Zs; sleep 0.5             # prefix s / prefix w zoom without resize-pane
+got="$($T list-clients -F '#{window_offset_x} #{window_width} #{window_zoomed_flag}') $($T display -p '#{pane_width} #{pane_mode}')"
+[[ $got == " 100 1 100 tree-mode" ]] && echo 'ok   choose-tree -Z fills the terminal' || { echo "FAIL choose-tree -Z: got [$got]"; exit 1; }
+$T send-keys -t t q; sleep 0.6;         expect 'leaving choose-tree restores the strip' 100 200 0 101 151
 $T select-pane -t t:.0; sleep 0.3;      expect 'focus left column scrolls to 0'    0   200 0 101 151
 $T select-pane -t t:.1; sleep 0.3;      expect 'focus middle column fully visible' 50  200 0 101 151
 $T send-keys -t t:.1 'tput civis; sleep 1' Enter; sleep 0.5; expect 'hidden cursor does not move view' 50 200 0 101 151
@@ -32,11 +36,11 @@ cycle;                                  expect 'preset 50 -> 66 widens column'  
 cycle;                                  expect 'preset 66 -> 100 widens more'       101 251 0 101 202
 $T resize-pane -Z -t t:.1; sleep 0.4    # zoomed: Alt+r must unzoom first, and must not deadlock on its own hook
 timeout 5 $T run-shell "$PWD/../scripts/scrollable.sh cycle" || { echo 'FAIL cycle while zoomed deadlocks'; exit 1; }
-sleep 0.4;                              expect 'preset 100 -> 66 from zoomed'       101 217 0 101 168
-$T split-window -v -t t:.1; sleep 0.3;  expect 'vertical split stacks in column'   101 217 0 101 101 168
-$T split-window -h -t t:.2; sleep 0.4;  expect 'stock split inside a column row'    101 217 0 101 101 135 168
-$T select-pane -t t:.1; sleep 0.4;      expect 'focus up keeps nested row intact'   101 217 0 101 101 135 168
-$T kill-pane -t t:.3; sleep 0.6;        expect 'close nested pane keeps columns'    101 217 0 101 101 168
+sleep 0.4;                              expect 'preset 100 -> 66 from zoomed'       67  217 0 101 168
+$T split-window -v -t t:.1; sleep 0.3;  expect 'vertical split stacks in column'   67  217 0 101 101 168
+$T split-window -h -t t:.2; sleep 0.4;  expect 'stock split inside a column row'    67  217 0 101 101 135 168
+$T select-pane -t t:.1; sleep 0.4;      expect 'focus up keeps nested row intact'   67  217 0 101 101 135 168
+$T kill-pane -t t:.3; sleep 0.6;        expect 'close nested pane keeps columns'    67  217 0 101 101 168
 split;                                  expect 'split inserts after current column' 117 267 0 101 101 168 218
 $T kill-pane -t t:.4; sleep 0.6;        expect 'kill the new (active) column'      101 217 0 101 101 168
 $T send-keys -t t:.3 exit Enter; sleep 0.8; expect 'shell exit shrinks window'     67  167 0 101 101
