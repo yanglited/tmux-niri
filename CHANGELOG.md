@@ -6,6 +6,8 @@ All notable changes to tmux-scrollable are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-10-08
+
 ### Fixed
 
 - `prefix s` and `prefix w` (`choose-tree -Z`) showed a blank screen on a scrolled window.
